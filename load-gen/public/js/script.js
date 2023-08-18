@@ -1,4 +1,10 @@
 let chart;
+let metadata;
+
+window.onload = async function () {
+    const response = await fetch('/metadata');
+    metadata = await response.json();
+}
 
 async function generateLoad() {
     if (chart) {
@@ -13,7 +19,8 @@ async function generateLoad() {
     if (response.status === 200) {
         let req = document.getElementById('requests');
         req.innerHTML = json.requests;
-        let statuses = Object.keys(json.statusCodes);
+        let avg = document.getElementById('average');
+        avg.innerHTML = json.average;
         let labels = ["p50", "p90", "p95", "p99"];
         let codes = [json.p50, json.p90, json.p95, json.p99];
 
@@ -39,4 +46,28 @@ async function generateLoad() {
 
     }
     document.getElementById('load').disabled = false;
+
+    if(metadata) {
+        let metadataContainer = document.getElementById('links');
+        metadata.forEach((item) => {
+            if (item.type === 'youtube') {
+                console.log(item);
+                let frame = document.createElement('iframe');
+                frame.title = item.title;
+                frame.src = item.href;
+                frame.classList.add('youtube');
+                metadataContainer.appendChild(frame);
+            } else {
+                let div = document.createElement('div');
+                div.classList.add('link');
+                let link = document.createElement('a');
+                link.href = item.href;
+                link.target = '_blank';
+                link.innerText = item.title;
+                div.appendChild(link);
+                metadataContainer.appendChild(div);
+            }
+
+        })
+    }
 }

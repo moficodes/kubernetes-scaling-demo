@@ -7,12 +7,19 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rakyll/hey/requester"
 )
+
+type Link struct {
+	Title string `json:"title"`
+	Href  string `json:"href"`
+	Type  string `json:"type"`
+}
 
 type HeyConfig struct {
 	URL         string `json:"url"`
@@ -24,6 +31,7 @@ type HeyConfig struct {
 
 type Result struct {
 	Requests int     `json:"requests"`
+	Average  float64 `json:"average"`
 	P50      float64 `json:"p50"`
 	P90      float64 `json:"p90"`
 	P95      float64 `json:"p95"`
@@ -110,11 +118,12 @@ func csvReport(data [][]string) Result {
 			continue
 		}
 		responseTime, _ := strconv.ParseFloat(line[0], 64)
+		total += responseTime
 		latencies = append(latencies, responseTime)
 		total += responseTime
 		res.StatusCodes[line[6]]++
 	}
-
+	res.Average = total / float64(res.Requests)
 	res.P50, res.P90, res.P95, res.P99 = calculatePercentiles(latencies)
 	return res
 }
@@ -140,6 +149,31 @@ func calculatePercentiles(latencies []float64) (p50, p90, p95, p99 float64) {
 	return
 }
 
+func getLink(title, u string) *Link {
+	link := &Link{}
+	if u == "" {
+		return nil
+	}
+	link.Title = title
+	link.Href = u
+	if strings.Contains(u, "youtube.com") || strings.Contains(u, "youtu.be") {
+		link.Type = "youtube"
+	} else if strings.Contains(u, "cloud.google.com") {
+		link.Type = "docs"
+	} else if strings.Contains(u, "github.com") {
+		link.Type = "github"
+	} else {
+		link.Type = "website"
+	}
+	return link
+}
+
+func metadata(links []*Link) func(c echo.Context) error {
+	return func(c echo.Context) error {
+		return c.JSON(http.StatusOK, links)
+	}
+}
+
 func getValueByIndex(latencies []float64, index float64) float64 {
 	if int(index) >= len(latencies) {
 		return latencies[len(latencies)-1]
@@ -147,12 +181,32 @@ func getValueByIndex(latencies []float64, index float64) float64 {
 	return latencies[int(index)]
 }
 
+func processLinks(links string) []*Link {
+	if links == "" {
+		return nil
+	}
+
+	linksArr := strings.Split(links, ",")
+	res := make([]*Link, 0, len(linksArr))
+	for _, link := range linksArr {
+		linkArr := strings.Split(link, "|")
+		if len(linkArr) != 2 {
+			continue
+		}
+		res = append(res, getLink(linkArr[0], linkArr[1]))
+	}
+	return res
+}
+
 func main() {
-	url := getEnvOrDefault("URL", "https://instance-raap3scyuq-uc.a.run.app/prime")
+	url := getEnvOrDefault("URL", "https://instance-raap3scyuq-uc.a.run.app/sqrt")
 	request := getEnvOrDefaultInt("REQUEST", 100)
 	concurrency := getEnvOrDefaultInt("CONCURRENCY", 10)
 	duration := getEnvOrDefaultInt("DURATION", 15)
 	timeout := getEnvOrDefaultInt("TIMEOUT", 10)
+
+	linksEnv := getEnvOrDefault("LINKS", "Kubernetes Job YAML Fields You Should Know|https://www.youtube.com/embed/0sLl0M9zg5Q,Cluster Autoscaling|https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-autoscaler,Code|https://github.com")
+	links := processLinks(linksEnv)
 
 	cfg := HeyConfig{
 		URL:         url,
@@ -173,6 +227,7 @@ func main() {
 		}),
 	)
 	e.POST("/generate", generate(cfg))
+	e.GET("/metadata", metadata(links))
 
 	port := os.Getenv("PORT")
 	if port == "" {
