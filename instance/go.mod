@@ -2,7 +2,10 @@ module github.com/moficodes/scaling-demo/instance
 
 go 1.20
 
-require cloud.google.com/go/firestore v1.11.0
+require (
+	cloud.google.com/go/firestore v1.11.0
+	github.com/google/uuid v1.3.0
+)
 
 require (
 	cloud.google.com/go v0.110.6 // indirect

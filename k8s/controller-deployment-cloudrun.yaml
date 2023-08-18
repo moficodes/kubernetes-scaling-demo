@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-cloudrun
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: controller-cloudrun
+  template:
+    metadata:
+      labels:
+        app: controller-cloudrun
+    spec:
+      serviceAccountName: gcp
+      nodeSelector:
+        iam.gke.io/gke-metadata-server-enabled: "true"
+      containers:
+      - name: controller
+        image: us-central1-docker.pkg.dev/mofilabs-next-demo-02/scaling/controller:v0.1.7
+        resources:
+          limits:
+            memory: "4Gi"
+            cpu: "2"
+        ports:
+        - containerPort: 8000
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
+          periodSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
+          periodSeconds: 3
+        env:
+          - name: PROJECT_ID
+            value: mofilabs-next-demo-02
+          - name: FIRESTORE_COLLECTION
+            value: cloudrun
+          - name: INSTANCE_COLLECTION
+            value: cloudrun-instances

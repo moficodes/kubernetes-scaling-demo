@@ -1,0 +1,35 @@
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body, html {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #000;
+}
+
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100vmin;   /* vmin takes the smaller of viewport width or height */
+    height: 100vmin;
+}
+
+.cell {
+    width: calc(100% / 64); /* 64 columns so each column takes up 1/64 of the total width */
+    height: 100%;
+    background-color: #000000;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+.row {
+    display: flex;
+    width: 100%;
+    height: calc(100% / 64); /* 64 rows so each row takes up 1/64 of the total height */
+}

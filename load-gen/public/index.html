@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <button id="load" onclick="generateLoad()">Generate Load</button>
+        <div id="result">
+            <div>
+                <div>Request</div>
+                <div id="requests"></div>
+            </div>
+            <div>
+                <div>Avg Duration</div>
+                <div id="average"></div>
+            </div>
+            <div class="chart">
+                <canvas id="chart"></canvas>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/script.js"></script>
+</body>
+
+</html>

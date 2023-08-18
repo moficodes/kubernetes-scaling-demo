@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/firestore"
+	"github.com/google/uuid"
 )
 
 const (
@@ -34,9 +35,12 @@ func mustGetEnv(key string, defaultValue string) string {
 
 func main() {
 	projectId := mustGetEnv("PROJECT_ID", "")
-	hostName := mustGetEnv("HOSTNAME", "localhost")
+	instanceCollection := mustGetEnv("INSTANCE_COLLECTION", "instances")
 
-	client, err := firestore.NewClient(context.Background(), projectId)
+	randomHostId := uuid.New().String()
+	hostName := mustGetEnv("HOSTNAME", randomHostId)
+	ctx := context.Background()
+	client, err := firestore.NewClient(ctx, projectId)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -50,7 +54,6 @@ func main() {
 
 	instance := Instance{Id: hostName, LastReported: time.Now()}
 
-	ctx := context.Background()
 	done := make(chan bool)
 	ticker := time.NewTicker(3 * time.Second)
 	go func() {
@@ -69,7 +72,7 @@ func main() {
 					log.Printf("Status changed from %d to %d\n", instance.Status, status)
 					instance.Status = status
 					instance.LastReported = time.Now()
-					_, err := client.Collection("instances").Doc(hostName).Set(ctx, instance)
+					_, err := client.Collection(instanceCollection).Doc(hostName).Set(ctx, instance)
 					if err != nil {
 						log.Fatalln(err)
 					}
@@ -105,7 +108,7 @@ func main() {
 				done <- true
 				instance := Instance{Id: hostName, Status: TERMINATED, LastReported: time.Now()}
 
-				_, err := client.Collection("instances").Doc(hostName).Set(ctx, instance)
+				_, err := client.Collection(instanceCollection).Doc(hostName).Set(ctx, instance)
 				if err != nil {
 					log.Fatalln(err)
 				}
@@ -114,6 +117,6 @@ func main() {
 		}
 	}()
 
-	log.Println("Starting server on port 8080")
+	log.Printf("Starting server %s on port 8080\n", hostName)
 	srv.ListenAndServe()
 }

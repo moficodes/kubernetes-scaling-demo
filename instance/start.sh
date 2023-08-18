@@ -8,6 +8,7 @@ for i in $(seq -w 1 40)
         -v /gcp/config/logs \
         --env CLOUDSDK_CONFIG=/gcp/config \
         --env GOOGLE_APPLICATION_CREDENTIALS=/gcp/config/application_default_credentials.json \
+        --env PROJECT_ID=mofilabs-next-demo-02 \
         -e HOSTNAME=instance$i \
-        moficodes/instance:v0.1.0
+        moficodes/instance:v1.5.0
     done

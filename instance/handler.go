@@ -42,7 +42,7 @@ func prime(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		time.Sleep(50 * time.Millisecond)
-		primes := generatePrimes(10_000_000)
+		primes := generatePrimes(100_000)
 		fmt.Fprintf(w, "found %d primes", len(primes))
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

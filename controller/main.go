@@ -43,8 +43,18 @@ func mustGetEnv(key string, defaultValue string) string {
 
 func main() {
 	projectId := mustGetEnv("PROJECT_ID", "")
-
+	ledCollection := mustGetEnv("FIRESTORE_COLLECTION", "led")
+	instanceCollection := mustGetEnv("INSTANCE_COLLECTION", "instances")
 	done := make(chan bool)
+
+	ctx := context.Background()
+
+	client, err := firestore.NewClient(ctx, projectId)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer client.Close()
 
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "OK")
@@ -85,25 +95,21 @@ func main() {
 
 	mapping := boardMapping(PANEL_HEIGHT, PANEL_WIDTH, panelPositions)
 
+	mappingData := MappingData{
+		Data: mapping,
+	}
+
+	_, err = client.Collection("mapping").Doc("data").Set(ctx, mappingData)
+	if err != nil {
+		log.Println(err)
+	}
+
 	colorGrid := make([][]int, PANEL_HEIGHT*len(panelPositions))
 	for i := 0; i < len(colorGrid); i++ {
 		colorGrid[i] = make([]int, PANEL_WIDTH*len(panelPositions[0]))
 	}
 
-	fmt.Println(len(colorGrid))
-	fmt.Println(len(colorGrid[0]))
-
-	ctx := context.Background()
-
-	client, err := firestore.NewClient(ctx, projectId)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer client.Close()
-
-	// go subscribe(projectId, subscription, ctx, done)
-	t := time.NewTicker(3 * time.Second)
+	t := time.NewTicker(2 * time.Second)
 	go func() {
 		for {
 			select {
@@ -111,7 +117,7 @@ func main() {
 				return
 			case <-t.C:
 				instances = make(map[string]Instance)
-				iter := client.Collection("instances").Documents(ctx)
+				iter := client.Collection(instanceCollection).Documents(ctx)
 				for {
 					doc, err := iter.Next()
 					if err != nil {
@@ -124,11 +130,14 @@ func main() {
 					instances[instance.Id] = instance
 
 					if instance.Status == TERMINATED && time.Since(instance.LastReported) > 5*time.Second {
-						client.Collection("instances").Doc(instance.Id).Delete(ctx)
+						_, err := client.Collection(instanceCollection).Doc(instance.Id).Delete(ctx)
+						if err != nil {
+							log.Println(err)
+						}
 					}
 
 					if time.Since(instance.LastReported) > 30*time.Second {
-						client.Collection("instances").Doc(instance.Id).Set(ctx, map[string]interface{}{
+						client.Collection(instanceCollection).Doc(instance.Id).Set(ctx, map[string]interface{}{
 							"Id":           instance.Id,
 							"Status":       TERMINATED,
 							"LastReported": time.Now(),
@@ -140,7 +149,7 @@ func main() {
 					Data: processInstancesForLed(mapping, colorGrid, instances),
 				}
 
-				_, err := client.Collection("led").Doc("data").Set(ctx, ledData)
+				_, err := client.Collection(ledCollection).Doc("data").Set(ctx, ledData)
 				if err != nil {
 					log.Println(err)
 				}
@@ -158,7 +167,7 @@ func main() {
 		for sig := range c {
 			if sig == os.Interrupt || sig == syscall.SIGTERM {
 				log.Println("Shutting down server")
-				done <- true
+				close(done)
 
 				srv.Shutdown(ctx)
 			}
