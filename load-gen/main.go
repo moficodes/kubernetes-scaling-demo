@@ -123,7 +123,7 @@ func csvReport(data [][]string) Result {
 		total += responseTime
 		res.StatusCodes[line[6]]++
 	}
-	res.Average = total / float64(res.Requests)
+	res.Average = float64(int((total/float64(res.Requests))*100)) / 100
 	res.P50, res.P90, res.P95, res.P99 = calculatePercentiles(latencies)
 	return res
 }
@@ -198,13 +198,22 @@ func processLinks(links string) []*Link {
 	return res
 }
 
+func environment(env string) func(c echo.Context) error {
+	return func(c echo.Context) error {
+		return c.JSON(http.StatusOK, map[string]string{
+			"env": env,
+		})
+	}
+}
+
 func main() {
-	url := getEnvOrDefault("URL", "https://instance-raap3scyuq-uc.a.run.app/sqrt")
+	url := getEnvOrDefault("URL", "https://instance-raap3scyuq-uc.a.run.app/prime")
 	request := getEnvOrDefaultInt("REQUEST", 100)
 	concurrency := getEnvOrDefaultInt("CONCURRENCY", 10)
 	duration := getEnvOrDefaultInt("DURATION", 15)
 	timeout := getEnvOrDefaultInt("TIMEOUT", 10)
 
+	env := getEnvOrDefault("ENVIRONMENT", "GKE")
 	linksEnv := getEnvOrDefault("LINKS", "Kubernetes Job YAML Fields You Should Know|https://www.youtube.com/embed/0sLl0M9zg5Q,Cluster Autoscaling|https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-autoscaler,Code|https://github.com")
 	links := processLinks(linksEnv)
 
@@ -228,6 +237,7 @@ func main() {
 	)
 	e.POST("/generate", generate(cfg))
 	e.GET("/metadata", metadata(links))
+	e.GET("/environment", environment(env))
 
 	port := os.Getenv("PORT")
 	if port == "" {

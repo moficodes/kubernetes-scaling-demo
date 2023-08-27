@@ -587,8 +587,8 @@ const firebaseConfig = {
     projectId: "mofilabs-next-demo-02",
     storageBucket: "mofilabs-next-demo-02.appspot.com",
     messagingSenderId: "690199829387",
-    appId: "1:690199829387:web:e09d662d10fd3fd82e6d8e",
-    measurementId: "G-9729H07HX6"
+    appId: "1:690199829387:web:bb56b5bfc40a40f42e6d8e",
+    measurementId: "G-01E8M2RQYJ"
 };
 // Initialize Firebase
 const app = (0, _app.initializeApp)(firebaseConfig);
@@ -599,6 +599,7 @@ async function getMapping(db) {
     const docSnap = await (0, _firestore.getDoc)(docRef);
     if (docSnap.exists()) {
         const { data } = docSnap.data();
+        console.log(data);
         return data;
     }
     console.log("no such document");
@@ -611,10 +612,11 @@ function intToHexColor(intValue) {
     return "#" + hexString;
 }
 async function getLedData(db) {
-    const docRef = (0, _firestore.doc)(db, "led", "data");
+    const docRef = (0, _firestore.doc)(db, "gke", "data");
     const docSnap = await (0, _firestore.getDoc)(docRef);
     if (docSnap.exists()) {
         const { data } = docSnap.data();
+        console.log(data);
         const byteString = data._byteString.binaryString;
         let res = [];
         for(let i = 0; i < byteString.length; i += 3){

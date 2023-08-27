@@ -2,10 +2,12 @@ apiVersion: v1
 kind: Service
 metadata:
   name: instance
+  annotations:
+    networking.gke.io/max-rate-per-endpoint: "10"
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: instance
   ports:
-  - port: 80
+  - port: 8080
     targetPort: 8080

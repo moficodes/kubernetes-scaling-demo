@@ -6,8 +6,6 @@ spec:
   behavior:
     scaleDown:
       stabilizationWindowSeconds: 10
-    scaleUp:
-      stabilizationWindowSeconds: 10
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
@@ -20,4 +18,14 @@ spec:
       name: cpu
       target:
         type: Utilization
-        averageUtilization: 20
+        averageUtilization: 50
+  - type: Object
+    object:
+      describedObject:
+        kind: Service
+        name: instance
+      metric:
+        name: "autoscaling.googleapis.com|gclb-capacity-utilization"
+      target:
+        averageValue: 50
+        type: AverageValue

@@ -98,6 +98,11 @@ func main() {
 		fmt.Fprintf(w, "OK")
 	})
 
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(200 * time.Millisecond)
+		fmt.Fprintf(w, "Hello from %s", hostName)
+	})
+
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 

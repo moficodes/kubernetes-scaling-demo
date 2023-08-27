@@ -1,0 +1,18 @@
+{
+  "name": "ui",
+  "version": "0.0.1",
+  "description": "ui for led simulations",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "parcel src/index.html"
+  },
+  "author": "@moficodes",
+  "license": "MIT",
+  "devDependencies": {
+    "parcel": "^2.9.3",
+    "process": "^0.11.10"
+  },
+  "dependencies": {
+    "firebase": "^10.1.0"
+  }
+}

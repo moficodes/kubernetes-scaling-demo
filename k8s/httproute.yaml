@@ -1,0 +1,13 @@
+kind: HTTPRoute
+apiVersion: gateway.networking.k8s.io/v1beta1
+metadata:
+  name: instance
+  labels:
+    gateway: instance
+spec:
+  parentRefs:
+  - name: instance
+  rules:
+  - backendRefs:
+    - name: instance
+      port: 8080

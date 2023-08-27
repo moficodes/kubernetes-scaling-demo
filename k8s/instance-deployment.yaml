@@ -17,11 +17,14 @@ spec:
       
       containers:
       - name: instance
-        image: us-central1-docker.pkg.dev/mofilabs-next-demo-02/scaling/instance:v0.1.11
+        image: us-central1-docker.pkg.dev/mofilabs-next-demo-02/scaling/instance:v0.1.13
         resources:
           limits:
-            memory: "64Mi"
-            cpu: "100m"
+            memory: "1Gi"
+            cpu: "250m"
+          requests:
+            memory: "1Gi"
+            cpu: "250m"
         ports:
         - containerPort: 8080
         livenessProbe:

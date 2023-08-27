@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "led-sim-gke",
     "public": "dist",
     "ignore": [
       "firebase.json",
