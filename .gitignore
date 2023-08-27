@@ -6,4 +6,6 @@ yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
 
+dist/
+
 **/.parcel-cache/
