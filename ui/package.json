@@ -4,6 +4,7 @@
   "description": "ui for led simulations",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "parcel build src/index.html",
     "start": "parcel src/index.html"
   },
   "author": "@moficodes",
