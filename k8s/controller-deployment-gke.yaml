@@ -17,7 +17,7 @@ spec:
         iam.gke.io/gke-metadata-server-enabled: "true"
       containers:
       - name: controller
-        image: us-central1-docker.pkg.dev/mofilabs-next-demo-02/scaling/controller:v0.1.7
+        image: us-central1-docker.pkg.dev/mofilabs-next-demo-02/scaling/controller:v0.1.12
         resources:
           limits:
             memory: "4Gi"
@@ -41,3 +41,5 @@ spec:
             value: gke
           - name: INSTANCE_COLLECTION
             value: gke-instances
+          - name: GAMMA
+            value: "4"

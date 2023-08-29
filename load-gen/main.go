@@ -208,12 +208,12 @@ func environment(env string) func(c echo.Context) error {
 
 func main() {
 	url := getEnvOrDefault("URL", "https://instance-raap3scyuq-uc.a.run.app/prime")
-	request := getEnvOrDefaultInt("REQUEST", 100)
+	request := getEnvOrDefaultInt("REQUEST", 10)
 	concurrency := getEnvOrDefaultInt("CONCURRENCY", 10)
-	duration := getEnvOrDefaultInt("DURATION", 15)
+	duration := getEnvOrDefaultInt("DURATION", 5)
 	timeout := getEnvOrDefaultInt("TIMEOUT", 10)
 
-	env := getEnvOrDefault("ENVIRONMENT", "GKE")
+	env := getEnvOrDefault("ENVIRONMENT", "Cloud Run")
 	linksEnv := getEnvOrDefault("LINKS", "Kubernetes Job YAML Fields You Should Know|https://www.youtube.com/embed/0sLl0M9zg5Q,Cluster Autoscaling|https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-autoscaler,Code|https://github.com")
 	links := processLinks(linksEnv)
 

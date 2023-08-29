@@ -98,6 +98,7 @@ iframe {
 }
 
 .link {
+    display: flex;
     color: #007BFF;
     text-decoration: none;
     margin: 8px;

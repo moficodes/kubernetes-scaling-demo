@@ -68,6 +68,24 @@ func intToThreeBytes(i int) []byte {
 	return []byte{byte(i >> 16), byte(i >> 8), byte(i)}
 }
 
+func processPixelsForLed(p PixelGrid, mapping []int) []byte {
+	pixels := make([]int, len(mapping))
+
+	count := 0
+	for i := 0; i < len(p.Pixels); i++ {
+		for j := 0; j < len(p.Pixels[i]); j++ {
+			pixels[mapping[count]] = p.Pixels[i][j]
+			count++
+		}
+	}
+
+	var res []byte
+	for i := 0; i < len(pixels); i++ {
+		res = append(res, intToThreeBytes(pixels[i])...)
+	}
+	return res
+}
+
 func processInstancesForLed(mapping []int, board [][]int, instances map[string]Instance) []byte {
 
 	keys := make([]string, len(instances))
@@ -86,11 +104,11 @@ func processInstancesForLed(mapping []int, board [][]int, instances map[string]I
 			if counter < len(keys) {
 				instance := instances[keys[counter]]
 				if instance.Status == ACTIVE {
-					board[i][j] = 0x00FF00
+					board[i][j] = 0x003800
 				} else if instance.Status == IDLE {
-					board[i][j] = 0xFFEA00
+					board[i][j] = 0x686000
 				} else if instance.Status == TERMINATED {
-					board[i][j] = 0xFF0000
+					board[i][j] = 0x680000
 				}
 				counter++
 			} else {

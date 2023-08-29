@@ -1,0 +1,26 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+}
+
+#pixels {
+    display: flex;
+    flex-direction: column;
+}
+
+.row {
+    display: flex;  
+    flex-direction: row;
+}
+
+.column {
+    border-radius: 5px;
+    margin: 1px;
+    width: 10px;
+    height: 10px;
+}

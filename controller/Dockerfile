@@ -35,6 +35,7 @@ COPY --from=builder /user/group /user/passwd /etc/
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 # Import the compiled executable from the first stage.
 COPY --from=builder /app /app
+COPY public public
 
 # Declare the port on which the webserver will be exposed.
 # As we're going to run the executable as an unprivileged user, we can't bind

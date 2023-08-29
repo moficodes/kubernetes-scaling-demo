@@ -6,6 +6,10 @@ type LedData struct {
 	Data []byte `json:"data" firestore:"data"`
 }
 
+type PixelGrid struct {
+	Pixels [][]int `json:"pixels" firestore:"pixels"`
+}
+
 type MappingData struct {
 	Data []int `json:"data" firestore:"data"`
 }

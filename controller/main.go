@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -12,8 +10,8 @@ import (
 	"time"
 
 	"cloud.google.com/go/firestore"
-	"github.com/gobwas/ws"
-	"github.com/gobwas/ws/wsutil"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 const (
@@ -29,6 +27,8 @@ const (
 )
 
 var instances = make(map[string]Instance)
+
+var skip = false
 
 func mustGetEnv(key string, defaultValue string) string {
 	value := os.Getenv(key)
@@ -56,36 +56,6 @@ func main() {
 
 	defer client.Close()
 
-	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "OK")
-	})
-
-	http.HandleFunc("/instances", getInstances)
-	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		conn, _, _, err := ws.UpgradeHTTP(r, w)
-		if err != nil {
-			log.Println(err)
-		}
-		log.Println("connection upgraded to ws")
-		go func() {
-			defer conn.Close()
-
-			for {
-				msg, err := json.Marshal(instances)
-				if err != nil {
-					log.Println(err)
-					return
-				}
-				err = wsutil.WriteServerMessage(conn, ws.OpText, msg)
-				if err != nil {
-					log.Println(err)
-					return
-				}
-				<-done
-			}
-		}()
-	})
-
 	panelPositions := [][]int{
 		{12, 13, 14, 15},
 		{8, 9, 10, 11},
@@ -109,6 +79,60 @@ func main() {
 		colorGrid[i] = make([]int, PANEL_WIDTH*len(panelPositions[0]))
 	}
 
+	e := echo.New()
+
+	e.Use(
+		middleware.LoggerWithConfig(middleware.LoggerConfig{
+			Format: "method=${method}, uri=${uri}, status=${status}\n"}),
+		middleware.CORSWithConfig(
+			middleware.CORSConfig{
+				AllowOrigins: []string{"*"},
+			},
+		),
+		middleware.GzipWithConfig(middleware.GzipConfig{
+			Level: 5,
+		}),
+		middleware.Secure(),
+		middleware.StaticWithConfig(middleware.StaticConfig{
+			Root:  "public",
+			HTML5: true,
+		}),
+	)
+
+	e.GET("/healthz", func(c echo.Context) error {
+		return c.String(http.StatusOK, "OK")
+	})
+
+	e.GET("/instances", getInstances)
+	e.POST("/skip", skipRender)
+	e.POST("/unskip", unskipRender)
+	e.POST("/direct", directRender(client, ledCollection, instanceCollection, mapping))
+	e.POST("/upload", fileUpload)
+	// http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+	// 	conn, _, _, err := ws.UpgradeHTTP(r, w)
+	// 	if err != nil {
+	// 		log.Println(err)
+	// 	}
+	// 	log.Println("connection upgraded to ws")
+	// 	go func() {
+	// 		defer conn.Close()
+
+	// 		for {
+	// 			msg, err := json.Marshal(instances)
+	// 			if err != nil {
+	// 				log.Println(err)
+	// 				return
+	// 			}
+	// 			err = wsutil.WriteServerMessage(conn, ws.OpText, msg)
+	// 			if err != nil {
+	// 				log.Println(err)
+	// 				return
+	// 			}
+	// 			<-done
+	// 		}
+	// 	}()
+	// })
+
 	t := time.NewTicker(2 * time.Second)
 	go func() {
 		for {
@@ -116,6 +140,9 @@ func main() {
 			case <-done:
 				return
 			case <-t.C:
+				if skip {
+					continue
+				}
 				instances = make(map[string]Instance)
 				iter := client.Collection(instanceCollection).Documents(ctx)
 				for {
@@ -153,13 +180,13 @@ func main() {
 				if err != nil {
 					log.Println(err)
 				}
+				log.Printf("wrote %d bytes to firestore", len(ledData.Data))
 			}
 		}
 	}()
 
 	// catch SIGINT and do a graceful shutdown
 
-	srv := &http.Server{Addr: ":8000"}
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
@@ -168,12 +195,11 @@ func main() {
 			if sig == os.Interrupt || sig == syscall.SIGTERM {
 				log.Println("Shutting down server")
 				close(done)
-
-				srv.Shutdown(ctx)
+				e.Shutdown(ctx)
 			}
 		}
 	}()
 
 	log.Println("Starting server on port 8000")
-	srv.ListenAndServe()
+	e.Logger.Fatal(e.Start(":8000"))
 }
