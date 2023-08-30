@@ -28,7 +28,7 @@ const (
 
 var instances = make(map[string]Instance)
 
-var skip = true
+var skip = false
 
 func mustGetEnv(key string, defaultValue string) string {
 	value := os.Getenv(key)
