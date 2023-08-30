@@ -28,7 +28,7 @@ const (
 
 var instances = make(map[string]Instance)
 
-var skip = false
+var skip = true
 
 func mustGetEnv(key string, defaultValue string) string {
 	value := os.Getenv(key)
@@ -107,31 +107,8 @@ func main() {
 	e.POST("/skip", skipRender)
 	e.POST("/unskip", unskipRender)
 	e.POST("/direct", directRender(client, ledCollection, instanceCollection, mapping))
+	e.POST("/gameoflife", gameOfLife)
 	e.POST("/upload", fileUpload)
-	// http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-	// 	conn, _, _, err := ws.UpgradeHTTP(r, w)
-	// 	if err != nil {
-	// 		log.Println(err)
-	// 	}
-	// 	log.Println("connection upgraded to ws")
-	// 	go func() {
-	// 		defer conn.Close()
-
-	// 		for {
-	// 			msg, err := json.Marshal(instances)
-	// 			if err != nil {
-	// 				log.Println(err)
-	// 				return
-	// 			}
-	// 			err = wsutil.WriteServerMessage(conn, ws.OpText, msg)
-	// 			if err != nil {
-	// 				log.Println(err)
-	// 				return
-	// 			}
-	// 			<-done
-	// 		}
-	// 	}()
-	// })
 
 	t := time.NewTicker(2 * time.Second)
 	go func() {

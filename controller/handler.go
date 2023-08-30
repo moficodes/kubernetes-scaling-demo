@@ -38,7 +38,7 @@ func directRender(client *firestore.Client,
 	instanceCollection string,
 	mapping []int) func(c echo.Context) error {
 	return func(c echo.Context) error {
-
+		skip = true
 		pixels := &PixelGrid{}
 		// err := c.Bind(pixels)
 		// if err != nil {
@@ -85,19 +85,10 @@ func fileUpload(c echo.Context) error {
 	}
 	squareImage := ConvertToSquare(i)
 	resized := resize.Resize(127, 127, squareImage, resize.NearestNeighbor)
-	// out, err := os.Create(mf.Filename)
-	// if err != nil {
-	// 	return &echo.HTTPError{Code: http.StatusInternalServerError, Message: "Failed to create file"}
-	// }
-	// defer out.Close()
-	// err = jpeg.Encode(out, resized, nil)
-	// if err != nil {
-	// 	return &echo.HTTPError{Code: http.StatusInternalServerError, Message: "Failed to encode file"}
-	// }
 
 	pixels := make([][]int, 0)
 
-	gamma := 2.2
+	gamma := 3.5
 	gammaVal := os.Getenv("GAMMA")
 	if gammaVal != "" {
 		g, err := strconv.ParseFloat(gammaVal, 64)
@@ -105,6 +96,8 @@ func fileUpload(c echo.Context) error {
 			gamma = g
 		}
 	}
+
+	log.Println("Gamma:", gamma)
 
 	for j := 0; j < resized.Bounds().Dy(); j += 2 {
 		var row []int
@@ -119,4 +112,28 @@ func fileUpload(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, PixelGrid{Pixels: pixels})
+}
+
+func gameOfLife(c echo.Context) error {
+	pixels := &PixelGrid{}
+	// err := c.Bind(pixels)
+	// if err != nil {
+	// 	log.Println(err)
+	// 	return &echo.HTTPError{Code: http.StatusBadRequest, Message: "Invalid request body"}
+	// }
+
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		log.Println(err)
+		return &echo.HTTPError{Code: http.StatusBadRequest, Message: "Invalid request body"}
+	}
+
+	err = json.Unmarshal(body, pixels)
+	if err != nil {
+		log.Println(err)
+		return &echo.HTTPError{Code: http.StatusBadRequest, Message: "Invalid request body"}
+	}
+
+	nextState := nextGeneration(pixels.Pixels)
+	return c.JSON(http.StatusOK, PixelGrid{Pixels: nextState})
 }

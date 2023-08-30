@@ -13,13 +13,18 @@
         <input type="file" name="file" accept="image/png, image/jpg" />
         <input type="submit" value="upload" />
     </form>
+
+    <input type="color" id="color" value="#FFFFFF">
     <script src="/js/scripts.js"></script>
 
     <div id="pixels">
 
     </div>
 
-    <button id="send" onclick="sendPixels()">Send</button>
+    <button id="send" onclick="sendPixels()">Send to Leds</button>
+    <button id="clear" onclick="clearPixels()">Clear</button>
+    <button id="gol" onclick="gameOfLife()">Game Of Life</button>
+    <button id="stop" onclick="stopGOL()">Stop</button>
 </body>
 
 </html>
