@@ -1,0 +1,29 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+}
+
+#pixels {
+    display: flex;
+    flex-direction: column;
+}
+
+.row {
+    display: flex;  
+    flex-direction: row;
+}
+
+.column {
+    border-radius: 5px;
+    border: 1px solid #000;
+    background-color: #000;
+    margin: 1px;
+    width: 12px;
+    height: 12px;
+}
+
